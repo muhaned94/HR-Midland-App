@@ -1,20 +1,12 @@
-// auth.routes.js - الكود الكامل لربط PostgreSQL
+// auth.routes.js - الكود الكامل لربط PostgreSQL (استخدام bcrypt)
 
-const express = require('express');
-const router = express.Router();
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const db = require('../db'); 
-const dotenv = require('dotenv');
-
-dotenv.config();
-const JWT_SECRET = process.env.JWT_SECRET || 'YOUR_SUPER_SECURE_SECRET';
+// ... (بداية الملف)
 
 router.post('/login', async (req, res) => {
     const { employeeId, password } = req.body;
 
     try {
-        // استعلام حقيقي من جدول employees باستخدام $1
+        // 1. استعلام حقيقي من جدول employees
         const result = await db.query('SELECT id, password_hash, job_title FROM employees WHERE id = $1', [employeeId]);
         const employee = result.rows;
 
@@ -24,12 +16,15 @@ router.post('/login', async (req, res) => {
         
         const user = employee[0];
         
-        const isMatch = (password === 'testpassword');
+        // 2. التحقق من كلمة المرور المشفرة (تفعيل الأمان الحقيقي)
+        // هذا السطر يجب أن يعمل بما أن الهاش صحيح في قاعدة بيانات Railway
+        const isMatch = await bcrypt.compare(password, user.password_hash); 
 
         if (!isMatch) {
             return res.status(401).json({ message: 'كلمة المرور غير صحيحة.' });
         }
 
+        // 3. إنشاء الـ Token
         const token = jwt.sign(
             { id: user.id, jobTitle: user.job_title },
             JWT_SECRET,
