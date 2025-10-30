@@ -14,27 +14,12 @@ router.post('/login', async (req, res) => {
     const { employeeId, password } = req.body;
 
     try {
-        // 1. استعلام حقيقي من جدول employees
-        const result = await db.query('SELECT id, password_hash, job_title FROM employees WHERE id = $1', [employeeId]);
-        const employee = result.rows;
-
-        if (employee.length === 0) {
-            // فشل: إذا لم يتم العثور على الموظف
-            return res.status(401).json({ message: 'الموظف غير موجود.' });
-        }
-        
+        // ... (جلب بيانات الموظف) ...
         const user = employee[0];
         
-        // *******************************************************
-        // ********* إلغاء حماية كلمة المرور هنا ***********
-        // ********* (لغرض اختبار الموقع الحي فقط) *********
-        // *******************************************************
-        
-        // ✅ القبول إذا كانت كلمة المرور هي 'testpassword' بغض النظر عن الهاش
-        const isMatch = (password === 'testpassword'); 
-        
-        // *******************************************************
-        
+        // ✅ إعادة تفعيل المقارنة الأمنية الحقيقية
+        const isMatch = await bcrypt.compare(password, user.password_hash); 
+
         if (!isMatch) {
             return res.status(401).json({ message: 'كلمة المرور غير صحيحة.' });
         }
