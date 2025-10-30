@@ -10,16 +10,13 @@ const LoginComponent = ({ onLoginSuccess }) => {
     const [error, setError] = useState('');
 
     const handleLogin = async (e) => {
-        e.preventDefault(); // منع تحديث الصفحة
-
-        if (!employeeId || !password) {
-            setError('الرجاء إدخال رقم الموظف وكلمة المرور.');
-            return;
-        }
-
+        e.preventDefault(); 
+        
+        // ✅ استخدام الرابط الحي الكامل (الذي تم تعريفه في vite.config.js)
+        const API_BASE_URL = process.env.VITE_API_URL || ''; 
+        
         try {
-            // إرسال البيانات إلى واجهة الـ API (الـ Backend)
-            const response = await axios.post('/api/auth/login', {
+            const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { // <--- التعديل هنا
                 employeeId,
                 password,
             });
