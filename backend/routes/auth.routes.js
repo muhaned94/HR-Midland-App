@@ -1,6 +1,14 @@
-// auth.routes.js - الكود الكامل لربط PostgreSQL (استخدام bcrypt)
+// auth.routes.js - الكود المُعدَّل لإلغاء الحماية والتشفير (لغرض الاختبار)
 
-// ... (بداية الملف)
+const express = require('express');
+const router = express.Router();
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const db = require('../db'); 
+const dotenv = require('dotenv');
+
+dotenv.config();
+const JWT_SECRET = process.env.JWT_SECRET || 'YOUR_SUPER_SECURE_SECRET';
 
 router.post('/login', async (req, res) => {
     const { employeeId, password } = req.body;
@@ -11,20 +19,27 @@ router.post('/login', async (req, res) => {
         const employee = result.rows;
 
         if (employee.length === 0) {
+            // فشل: إذا لم يتم العثور على الموظف
             return res.status(401).json({ message: 'الموظف غير موجود.' });
         }
         
         const user = employee[0];
         
-        // 2. التحقق من كلمة المرور المشفرة (تفعيل الأمان الحقيقي)
-        // هذا السطر يجب أن يعمل بما أن الهاش صحيح في قاعدة بيانات Railway
-        const isMatch = await bcrypt.compare(password, user.password_hash); 
-
+        // *******************************************************
+        // ********* إلغاء حماية كلمة المرور هنا ***********
+        // ********* (لغرض اختبار الموقع الحي فقط) *********
+        // *******************************************************
+        
+        // ✅ القبول إذا كانت كلمة المرور هي 'testpassword' بغض النظر عن الهاش
+        const isMatch = (password === 'testpassword'); 
+        
+        // *******************************************************
+        
         if (!isMatch) {
             return res.status(401).json({ message: 'كلمة المرور غير صحيحة.' });
         }
 
-        // 3. إنشاء الـ Token
+        // 3. إنشاء الـ Token (في حال نجاح الدخول)
         const token = jwt.sign(
             { id: user.id, jobTitle: user.job_title },
             JWT_SECRET,
