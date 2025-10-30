@@ -1,9 +1,9 @@
-// auth.routes.js - الكود المُعدَّل لإلغاء الحماية والتشفير (لغرض الاختبار)
+// auth.routes.js - إلغاء التشفير والمقارنة النصية (غير آمن)
 
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+// ❌ تم إزالة bcrypts/bcrypt.compare
 const db = require('../db'); 
 const dotenv = require('dotenv');
 
@@ -14,12 +14,22 @@ router.post('/login', async (req, res) => {
     const { employeeId, password } = req.body;
 
     try {
-        // ... (جلب بيانات الموظف) ...
+        // 1. جلب كلمة المرور (كنص عادي)
+        const result = await db.query('SELECT id, job_title, password FROM employees WHERE id = $1', [employeeId]);
+        const employee = result.rows;
+
+        if (employee.length === 0) {
+            return res.status(401).json({ message: 'الموظف غير موجود.' });
+        }
+        
         const user = employee[0];
         
-        // ✅ إعادة تفعيل المقارنة الأمنية الحقيقية
-        const isMatch = await bcrypt.compare(password, user.password_hash); 
-
+        // *******************************************************
+        // ✅ مقارنة كلمة المرور المدخلة مباشرةً مع القيمة المخزنة كنص
+        const isMatch = (password === user.password); 
+        
+        // *******************************************************
+        
         if (!isMatch) {
             return res.status(401).json({ message: 'كلمة المرور غير صحيحة.' });
         }
