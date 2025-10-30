@@ -1,20 +1,20 @@
-// db.js - الاتصال الفعلي بقاعدة بيانات PostgreSQL (مُعدَّل لـ Railway)
+// db.js - الاتصال الفعلي بقاعدة بيانات PostgreSQL (إضافة إعدادات SSL للإنتاج)
 
 const { Pool } = require('pg');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-// استخدام رابط الاتصال الكامل الذي توفره Railway/Render
-// هذا هو أفضل طريقة لضمان التوصيل في بيئات الاستضافة
-const connectionString = process.env.DATABASE_URL;
+// تحديد إعدادات SSL
+// نستخدم SSL إذا كنا في بيئة إنتاج (Railway/Render)
+const isProduction = process.env.NODE_ENV === 'production';
 
 const pool = new Pool({
-    connectionString: connectionString,
-    // إعداد SSL مطلوب لبيئات الاستضافة السحابية
-    ssl: {
+    connectionString: process.env.DATABASE_URL, // الرابط الذي يوفره Railway
+    ssl: isProduction ? {
+        // ✅ هذا يحل مشكلة الـ SSL الشائعة في بيئات الإنتاج السحابية
         rejectUnauthorized: false
-    }
+    } : false, // لا تستخدم SSL في البيئة المحلية
 });
 
 /**
